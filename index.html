@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hayato Admin V100</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { background: #111; color: #fff; padding: 20px; }
+    .container { max-width: 500px; margin: auto; background: #1c1c1c; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px #00bfff; }
+    h2 { text-align: center; margin-bottom: 20px; color: #00bfff; }
+    input, textarea, select {
+      width: 100%; padding: 10px; margin-bottom: 15px;
+      background: #222; border: none; border-radius: 5px; color: #fff;
+    }
+    button {
+      background: linear-gradient(90deg, #007bff, #00bfff);
+      border: none; color: white; padding: 12px; width: 100%;
+      border-radius: 5px; font-weight: bold; cursor: pointer;
+      box-shadow: 0 0 10px #00bfff;
+    }
+    .status { margin-top: 10px; font-weight: bold; }
+    .section { margin-bottom: 30px; border-top: 1px solid #333; padding-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Hayato Admin Panel V100</h2>
+
+    <div class="section">
+      <h3>👑 Send Coins</h3>
+      <input type="text" id="coinUid" placeholder="User UID">
+      <input type="number" id="coinAmount" placeholder="Amount of Coins">
+      <button onclick="sendCoins()">Send Coins</button>
+      <p class="status" id="coinStatus"></p>
+    </div>
+
+    <div class="section">
+      <h3>🎮 Slot Settings</h3>
+      <select id="slotStatus">
+        <option value="active">Active</option>
+        <option value="coming">Coming Soon</option>
+      </select>
+      <input type="text" id="roomId" placeholder="Room ID">
+      <input type="text" id="roomPass" placeholder="Room Password">
+      <button onclick="updateSlot()">Update Slot</button>
+      <p class="status" id="slotStatusMsg"></p>
+    </div>
+
+    <div class="section">
+      <h3>📢 Announcement</h3>
+      <textarea id="announceText" placeholder="Type Announcement..."></textarea>
+      <button onclick="postAnnouncement()">Post</button>
+      <p class="status" id="announceMsg"></p>
+    </div>
+  </div>
+
+  <!-- Firebase JS SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, set, update, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyjHRJ7_q-VrxEh2joJcyumzCzqibABfI",
+      authDomain: "hayato-esports-84f9e.firebaseapp.com",
+      databaseURL: "https://hayato-esports-84f9e-default-rtdb.firebaseio.com",
+      projectId: "hayato-esports-84f9e",
+      storageBucket: "hayato-esports-84f9e.appspot.com",
+      messagingSenderId: "498924188514",
+      appId: "1:498924188514:web:eedb60efe5e1a7abfff23b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.sendCoins = function () {
+      const uid = document.getElementById("coinUid").value.trim();
+      const coins = parseInt(document.getElementById("coinAmount").value);
+      if (!uid || isNaN(coins)) return alert("Enter valid UID and coins.");
+
+      const userRef = ref(db, 'users/' + uid);
+      update(userRef, { coins: coins }).then(() => {
+        push(ref(db, 'users/' + uid + '/history'), `Admin sent ${coins} coins`);
+        document.getElementById("coinStatus").textContent = "✅ Coins sent successfully!";
+      });
+    };
+
+    window.updateSlot = function () {
+      const status = document.getElementById("slotStatus").value;
+      const room = document.getElementById("roomId").value;
+      const pass = document.getElementById("roomPass").value;
+      update(ref(db, 'slots'), {
+        status: status,
+        room_id: room,
+        password: pass
+      }).then(() => {
+        document.getElementById("slotStatusMsg").textContent = "✅ Slot updated!";
+      });
+    };
+
+    window.postAnnouncement = function () {
+      const text = document.getElementById("announceText").value.trim();
+      if (!text) return alert("Write something!");
+      push(ref(db, 'announcements'), text).then(() => {
+        document.getElementById("announceMsg").textContent = "✅ Announcement posted!";
+        document.getElementById("announceText").value = "";
+      });
+    };
+  </script>
+</body>
+</html>
