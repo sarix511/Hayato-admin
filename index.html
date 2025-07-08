@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hayato Admin Panel</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: #111;
+      color: #fff;
+    }
+    header {
+      background: #222;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .sidebar {
+      width: 250px;
+      background: #1e1e1e;
+      position: fixed;
+      top: 0;
+      left: -260px;
+      height: 100%;
+      transition: 0.3s;
+      padding: 1rem;
+      z-index: 99;
+    }
+    .sidebar.active {
+      left: 0;
+    }
+    .hamburger {
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .close {
+      float: right;
+      cursor: pointer;
+      font-size: 20px;
+      color: red;
+    }
+    .sidebar button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      background: #007bff;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #007bff80;
+      cursor: pointer;
+    }
+    .content {
+      margin-left: 270px;
+      padding: 1rem;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 6px;
+    }
+    .box {
+      background: #222;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="hamburger" onclick="toggleSidebar()">☰</div>
+    <h2>Hayato Admin</h2>
+  </header>
+
+  <div class="sidebar" id="sidebar">
+    <div class="close" onclick="toggleSidebar()">✖</div>
+    <button onclick="document.getElementById('coinBox').scrollIntoView()">Send Coins</button>
+    <button onclick="document.getElementById('paymentBox').scrollIntoView()">Approve Payments</button>
+    <button onclick="document.getElementById('roomBox').scrollIntoView()">Add Room ID & Pass</button>
+    <button onclick="document.getElementById('slotBox').scrollIntoView()">Toggle Coming Soon</button>
+    <button onclick="document.getElementById('announceBox').scrollIntoView()">Update Announcement</button>
+  </div>
+
+  <div class="content">
+    <div class="box" id="coinBox">
+      <h3>Send Coins</h3>
+      <input id="coinUid" placeholder="Enter User UID"/>
+      <input id="coinAmount" type="number" placeholder="Coins to Send"/>
+      <button onclick="sendCoins()">Send</button>
+    </div>
+
+    <div class="box" id="paymentBox">
+      <h3>Approve Payment</h3>
+      <input id="payUid" placeholder="Enter UID"/>
+      <input id="payCoins" type="number" placeholder="Coins to Approve"/>
+      <button onclick="approvePayment()">Approve</button>
+    </div>
+
+    <div class="box" id="roomBox">
+      <h3>Add Room ID & Password</h3>
+      <input id="roomId" placeholder="Room ID"/>
+      <input id="roomPass" placeholder="Password"/>
+      <button onclick="setRoom()">Set Room</button>
+    </div>
+
+    <div class="box" id="slotBox">
+      <h3>Toggle Coming Soon</h3>
+      <input id="slotId" placeholder="Slot Section ID"/>
+      <button onclick="toggleSlot()">Toggle</button>
+    </div>
+
+    <div class="box" id="announceBox">
+      <h3>Announcement</h3>
+      <textarea id="announcementText" rows="3" placeholder="Write announcement"></textarea>
+      <button onclick="updateAnnouncement()">Update</button>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyjHRJ7_q-VrxEh2joJcyumzCzqibABfI",
+      authDomain: "hayato-esports-84f9e.firebaseapp.com",
+      projectId: "hayato-esports-84f9e",
+      storageBucket: "hayato-esports-84f9e.appspot.com",
+      messagingSenderId: "498924188514",
+      appId: "1:498924188514:web:eedb60efe5e1a7abfff23b",
+      measurementId: "G-WN5MGVN8PJ"
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('active');
+    }
+
+    function sendCoins() {
+      const uid = document.getElementById('coinUid').value;
+      const coins = parseInt(document.getElementById('coinAmount').value);
+      if (uid && coins) {
+        db.collection("users").doc(uid).update({
+          coins: firebase.firestore.FieldValue.increment(coins)
+        }).then(() => alert("✅ Coins sent!"));
+      }
+    }
+
+    function approvePayment() {
+      const uid = document.getElementById('payUid').value;
+      const coins = parseInt(document.getElementById('payCoins').value);
+      if (uid && coins) {
+        db.collection("users").doc(uid).update({
+          coins: firebase.firestore.FieldValue.increment(coins)
+        }).then(() => alert("✅ Payment approved!"));
+      }
+    }
+
+    function setRoom() {
+      const id = document.getElementById('roomId').value;
+      const pass = document.getElementById('roomPass').value;
+      db.collection("room").doc("current").set({ id, pass }).then(() => alert("✅ Room set"));
+    }
+
+    function toggleSlot() {
+      const section = document.getElementById('slotId').value;
+      db.collection("slots").doc(section).get().then(doc => {
+        const state = doc.exists ? doc.data().comingSoon : true;
+        db.collection("slots").doc(section).set({ comingSoon: !state });
+        alert("🔁 Slot toggled");
+      });
+    }
+
+    function updateAnnouncement() {
+      const msg = document.getElementById('announcementText').value;
+      db.collection("site").doc("announcement").set({ msg }).then(() => alert("📢 Announcement updated!"));
+    }
+  </script>
+</body>
+</html>
