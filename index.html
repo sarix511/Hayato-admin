@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hayato Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(145deg, #0a1014, #121a20);
+      color: #fff;
+      overflow-x: hidden;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 220px;
+      height: 100%;
+      background-color: #101820;
+      padding: 1.5rem 1rem;
+      box-shadow: 2px 0 15px #00bfff;
+    }
+    .sidebar h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: #00bfff;
+    }
+    .sidebar a {
+      display: block;
+      color: #fff;
+      margin: 10px 0;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .content {
+      margin-left: 240px;
+      padding: 2rem;
+    }
+    .section {
+      display: none;
+    }
+    .active {
+      display: block;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      background-color: #1e2a33;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    button {
+      background: linear-gradient(90deg, #007bff, #00bfff);
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      border-radius: 8px;
+      font-weight: bold;
+      box-shadow: 0 0 10px #00bfff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Admin Panel</h2>
+    <input id="adminUID" placeholder="Enter Admin UID" />
+    <button onclick="authAdmin()">Enter</button>
+    <hr />
+    <a href="#" onclick="showSection('sendCoins')">💰 Send Coins</a>
+    <a href="#" onclick="showSection('announce')">📢 Announcement</a>
+    <a href="#" onclick="showSection('slot')">🎮 Set Slot</a>
+    <a href="#" onclick="showSection('result')">🏆 Post Result</a>
+    <a href="#" onclick="showSection('ban')">⛔ Ban User</a>
+  </div>
+
+  <div class="content">
+    <div id="sendCoins" class="section">
+      <h2>💰 Send Coins</h2>
+      <input id="coinUID" placeholder="User UID" />
+      <input id="coinAmount" placeholder="Amount" type="number" />
+      <button onclick="sendCoins()">Send</button>
+    </div>
+
+    <div id="announce" class="section">
+      <h2>📢 Announcement</h2>
+      <textarea id="announcementMsg" placeholder="Enter announcement text..."></textarea>
+      <button onclick="postAnnouncement()">Post</button>
+    </div>
+
+    <div id="slot" class="section">
+      <h2>🎮 Set Slot</h2>
+      <input id="roomID" placeholder="Room ID" />
+      <input id="roomPass" placeholder="Room Password" />
+      <button onclick="setSlot()">Update Slot</button>
+    </div>
+
+    <div id="result" class="section">
+      <h2>🏆 Post Tournament Result</h2>
+      <textarea id="resultText" placeholder="Enter tournament result..."></textarea>
+      <button onclick="postResult()">Post Result</button>
+    </div>
+
+    <div id="ban" class="section">
+      <h2>⛔ Ban User</h2>
+      <input id="banUID" placeholder="Enter UID to ban" />
+      <button onclick="banUser()">Ban</button>
+    </div>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, update, push, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDyjHRJ7_q-VrxEh2joJcyumzCzqibABfI",
+  authDomain: "hayato-esports-84f9e.firebaseapp.com",
+  databaseURL: "https://hayato-esports-84f9e-default-rtdb.firebaseio.com",
+  projectId: "hayato-esports-84f9e",
+  storageBucket: "hayato-esports-84f9e.appspot.com",
+  messagingSenderId: "498924188514",
+  appId: "1:498924188514:web:eedb60efe5e1a7abfff23b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+window.authAdmin = () => {
+  alert("Admin UID accepted. Panel unlocked.");
+};
+
+window.showSection = id => {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+};
+
+window.sendCoins = () => {
+  const uid = document.getElementById("coinUID").value;
+  const amount = parseInt(document.getElementById("coinAmount").value);
+  if (!uid || isNaN(amount)) return alert("Fill both fields");
+  update(ref(db, "slots/status/users/" + uid), {
+    coins: amount
+  });
+  alert("Coins sent.");
+};
+
+window.postAnnouncement = () => {
+  const msg = document.getElementById("announcementMsg").value;
+  const key = push(ref(db, "slots/status/announcements")).key;
+  set(ref(db, "slots/status/announcements/" + key), msg);
+  alert("Announcement posted.");
+};
+
+window.setSlot = () => {
+  const id = document.getElementById("roomID").value;
+  const pass = document.getElementById("roomPass").value;
+  set(ref(db, "slots/status/slots"), {
+    room_id: id,
+    password: pass,
+    status: "active"
+  });
+  alert("Slot updated");
+};
+
+window.postResult = () => {
+  const txt = document.getElementById("resultText").value;
+  const key = push(ref(db, "slots/status/tournament_results")).key;
+  set(ref(db, "slots/status/tournament_results/" + key), txt);
+  alert("Result posted");
+};
+
+window.banUser = () => {
+  const uid = document.getElementById("banUID").value;
+  set(ref(db, "slots/status/banned/" + uid), true);
+  alert("User banned");
+};
+</script>
+</body>
+</html>
